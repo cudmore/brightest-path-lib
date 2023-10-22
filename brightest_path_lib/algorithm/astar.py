@@ -31,8 +31,8 @@ import math
 import numpy as np
 from queue import PriorityQueue, Queue
 from typing import List, Tuple
-from brightest_path_lib.cost import ReciprocalTransonic
-from brightest_path_lib.heuristic import EuclideanTransonic
+from brightest_path_lib.cost import Reciprocal  # Transonic
+from brightest_path_lib.heuristic import Euclidean  # Transonic
 from brightest_path_lib.image import ImageStats
 from brightest_path_lib.input import CostFunction, HeuristicFunction
 from brightest_path_lib.node import Node
