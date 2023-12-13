@@ -8,6 +8,9 @@
     <p id="title">Pyodide app to load tif and annotations, perform brightest path tracing, and plot !!!</p>
     <script>
         async function main() {
+            let serverAddress = 'http://localhost:8001/ftpshare/';
+            console.log(serverAddress)
+
             let pyodide = await loadPyodide();
             await pyodide.loadPackage(["pandas"]);
             await pyodide.loadPackage("matplotlib");
@@ -21,14 +24,17 @@
             await micropip.install('tifffile');
             
             // install our brightest-path-lib from a wheel (whl) via http
-            await micropip.install('http://localhost:8000/ftpshare/brightest_path_lib-1.0.13-py3-none-any.whl');
+            await micropip.install(serverAddress + 'brightest_path_lib-1.0.13-py3-none-any.whl');
 
             // load a zip from http and unpack it, results in pyodideTifPath
             await pyodide.runPythonAsync(`
                 """Load a zip from http and unpack it into pyodide runtime filesystem.
                 """
                 from pyodide.http import pyfetch
-                tifZipPath = 'http://localhost:8000/ftpshare/rr30a_s0_ch2_8_bit.tif.zip'
+                tifZipPath = 'http://localhost:8001/ftpshare/rr30a_s0_ch2_8_bit.tif.zip'
+                
+                tifZipPath = 'https://raw.githubusercontent.com/cudmore/brightest-path-lib/main/ftpshare/rr30a_s0_ch2_8_bit.tif.zip'
+
                 response = await pyfetch(tifZipPath)
                 print('tifZipPath response:', response.ok, response.status)
                 await response.unpack_archive()
@@ -37,26 +43,31 @@
             // Downloading a single py file and run function runBrightesPath_pyodide()
             await pyodide.runPythonAsync(`
                 from pyodide.http import pyfetch
-                response = await pyfetch("http://localhost:8000/ftpshare/myScript.py")
-                with open("myScript.py", "wb") as f:
+                response = await pyfetch("http://localhost:8001/ftpshare/myScript.py")
+                with open("myScript_tmp.py", "wb") as f:
                     f.write(await response.bytes())
-            `)
 
-            let csvPath = 'http://localhost:8000/ftpshare/rr30a_s0_pa.txt';
+                import os
+                print('os.getcwd():', os.getcwd())  # /home/pyodide
+                print(os.listdir(os.getcwd()))
+
+            `);
+
+            // let csvPath = 'http://localhost:8001/ftpshare/rr30a_s0_pa.txt';
+            let csvPath = 'https://raw.githubusercontent.com/cudmore/brightest-path-lib/main/ftpshare/rr30a_s0_pa.txt';
             let pyodideTifPath = 'rr30a_s0_ch2_8_bit.tif';
-            //pyodidePath = pyodide.open_url(csvPath)
 
-            pkg = pyodide.pyimport("myScript");
+            pkg = pyodide.pyimport("myScript_tmp");
 
-            // console.log('xxx', pkg.aTracing, 'testVar:', pkg.aTracing.testVar)
-            let startPoint = [31, 231.50833333, 401.375];
-            let stopPoint = Array(31, 218.4, 445.25833333);
+            // trace just one point
+            let startPoint = pyodide.toPy([31, 231.50833333, 401.375]);
+            let stopPoint = pyodide.toPy([31, 218.4, 445.25833333]);
             pkg.aTracing.setImage(pyodideTifPath);
             path = pkg.aTracing.runTracing(startPoint, stopPoint);
             console.log('path is:', path.toJs());
             
             // run a tracing on lots of pairwise points
-            // pkg.runBrightesPath_pyodide(pyodideTifPath, csvPath);
+            // pkg.runBrightestPath(pyodideTifPath, csvPath, doPyodide=true);
             
             pkg.destroy();
 

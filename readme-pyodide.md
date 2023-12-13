@@ -1,10 +1,19 @@
 
-```
-python -m http.server
-```
+Build a wheel
 
 ```
-// example on how to run python and access variable from javascript
+python setup.py bdist_wheel
+```
+
+Run a local server
+
+```
+python mySimpleServer.py
+```
+
+Example of how to run Python and access variables from Javascript
+
+```
 pyodide.runPython(`
     #import js
     products = [

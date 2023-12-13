@@ -1,7 +1,11 @@
 import time
+# import requests
+
 import numpy as np
 import pandas as pd
 import tifffile
+
+from typing import List
 
 import matplotlib
 
@@ -27,15 +31,22 @@ class pmmTracing():
         self.image = tifffile.imread(tifPath)
         print('   image:', self.image.shape)
 
-    def runTracing(self, startPnt, stopPnt):
-        print(f'xxx pmmTracing.runTracing() startPnt: {type(startPnt)} {startPnt} stopPnt:{stopPnt}')
-        print(f'   xxx type(startPnt): {type(startPnt)}')
+    def runTracing(self, startPnt : List[float], stopPnt : List[float]) -> List[int]:
+        """Run brightest path tracing from start to stop.
+        
+        Parameters
+        ----------
+        startPnt, stopPnt
+            Start and stop point to trace from and to.
+        """
+        # print(f'xxx pmmTracing.runTracing() startPnt: {type(startPnt)} {startPnt} stopPnt:{stopPnt}')
+        # print(f'   xxx type(startPnt): {type(startPnt)}')
 
-        if pyodide is not None:
-            if isinstance(startPnt, pyodide.JsProxy):
-                startPnt = startPnt.to_py()
-                stopPnt = stopPnt.to_py()
-                # print(f'   now type(startPnt): {type(startPnt)} {startPnt}')
+        # if pyodide is not None:
+        #     if isinstance(startPnt, pyodide.JsProxy):
+        #         startPnt = startPnt.to_py()
+        #         stopPnt = stopPnt.to_py()
+        #         # print(f'   now type(startPnt): {type(startPnt)} {startPnt}')
                 
         algorithm = brightest_path_lib.algorithm.NBAStarSearch(self.image, startPnt, stopPnt)
 
@@ -52,22 +63,38 @@ class pmmTracing():
     
 aTracing = pmmTracing()
 
-def runBrightesPath_pyodide(pyodideTifPath : str, csvPath : str):
-    """
-    pyodideTifPath : str
-        Local file in the pyodide file-system, loaded from javascript
-    csvPath:
+# def runBrightesPath_pyodide(pyodideTifPath : str, csvPath : str):
+#     """
+#     pyodideTifPath : str
+#         Local file in the pyodide file-system, loaded from javascript
+#     csvPath:
 
-    """
-    csvPath = pyodide.open_url(csvPath)
-    runBrightestPath(pyodideTifPath, csvPath, doPyodide=True)
+#     """
+#     print('1 csvPath:', type(csvPath), csvPath)
+#     # csvPath = pyodide.open_url(csvPath)  # io.StringIO
+#     print('2 csvPath:', type(csvPath), csvPath)
+#     runBrightestPath(pyodideTifPath, csvPath, doPyodide=True)
 
-def runBrightestPath(tifPath, csvPath, doPyodide=False):
+def runBrightestPath(tifPath, csvPath, doPyodide):
     
     print('myScript.runBrightestPath()')
-
+    print('   tifPath:', tifPath)
+    print('   csvPath:', csvPath)
+    print('   doPyodide:', doPyodide)
+    
+    # want to get rid of this, but...
+    # when using pyodide, python wesockets is broken
     # if doPyodide:
-    #     csvPath = pyodide.open_url(csvPath)
+    if pyodide is not None:
+        csvPath = pyodide.open_url(csvPath)  # io.StringIO
+        print('doPyodide:', doPyodide, 'csvPath:', csvPath)
+    # else:
+    #     print('error: myScript.runBrightest did not find pyodide import')
+    #     return
+
+    #csvPath = 'http://localhost:8000/ftpshare/rr30a_s0_pa.csv'
+    # csvPath = pyodide.open_url(csvPath)  # io.StringIO
+    # s=requests.get(csvPath).content.decode('utf-8')
 
     print('python loading csv with pandas csvPath:', csvPath)
     df = pd.read_csv(csvPath, header=1)
