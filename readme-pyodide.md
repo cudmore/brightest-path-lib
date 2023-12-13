@@ -1,15 +1,18 @@
 
-Build a wheel
+1) Build a local Python wheel
 
 ```
 python setup.py bdist_wheel
 ```
 
-Run a local server
+2) Run a local server
 
 ```
-python mySimpleServer.py
+python ftpshare/mySimpleServer.py
 ```
+
+3) Open `pidiode.html` in a browser
+
 
 Example of how to run Python and access variables from Javascript
 
